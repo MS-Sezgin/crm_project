@@ -59,6 +59,11 @@ class LoginPage(BasePage):
         self.inputPassword.returnPressed.connect(self.on_login)
         self.route(self.btnClose, "exit")
 
+    def reset(self):
+        self.inputUsername.clear()
+        self.inputPassword.clear()
+        self.labelWarning.setText("")
+
     def on_login(self, *_):
         username = self.inputUsername.text().strip()
         password = self.inputPassword.text()

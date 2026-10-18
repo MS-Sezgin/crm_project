@@ -58,6 +58,9 @@ class MainWindow(QMainWindow):
             self.is_admin = False
         elif target == "preferences_admin":
             self.is_admin = True
+        if target == "login":
+            self.is_admin = False
+            self.pages["login"].reset()
         self.show_page(target)
 
 

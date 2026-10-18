@@ -45,6 +45,8 @@ class PreferencesAdminPage(BasePage):
             body.addWidget(button)
         root.addWidget(card, 0, Qt.AlignmentFlag.AlignHCenter)
 
+        self.btnLogout = QPushButton("Log out")
+        root.addWidget(self.btnLogout, 0, Qt.AlignmentFlag.AlignHCenter)
         self.btnClose = QPushButton("Close")
         root.addWidget(self.btnClose, 0, Qt.AlignmentFlag.AlignHCenter)
         root.addStretch()
@@ -54,4 +56,5 @@ class PreferencesAdminPage(BasePage):
         self.route(self.btnMentorInterview, "mentor_interview")
         self.route(self.btnInterviews, "interviews")
         self.route(self.btnAdmin, "admin_menu")
+        self.route(self.btnLogout, "login")
         self.route(self.btnClose, "exit")

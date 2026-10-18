@@ -77,6 +77,13 @@ def run_flow(use_ui_file):
     login.inputPassword.setText("1234")
     login.btnLogin.click()
     check(current() is pages["preferences"], "user should reach Preferences")
+    pages["preferences"].btnLogout.click()
+    check(current() is pages["login"], "log out should return to login")
+    check(login.inputUsername.text() == "", "log out should clear the login form")
+    login.inputUsername.setText("student")
+    login.inputPassword.setText("1234")
+    login.btnLogin.click()
+    check(current() is pages["preferences"], "user should log in again after log out")
 
     pages["preferences"].btnApplications.click()
     apps = pages["applications"]
