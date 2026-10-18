@@ -14,8 +14,9 @@ from datetime import datetime
 
 from openpyxl import load_workbook
 
-ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.environ.get("CRM_DATA_DIR", os.path.join(ROOT_DIR, "data"))
+from paths import app_dir
+
+DATA_DIR = os.environ.get("CRM_DATA_DIR", os.path.join(app_dir(), "data"))
 
 APPLICATIONS_FILE = "Applications.xlsx"
 INTERVIEWS_FILE = "Interviews.xlsx"

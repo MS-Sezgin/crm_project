@@ -14,8 +14,9 @@ import os
 from datetime import datetime, timedelta, timezone
 from email.message import EmailMessage
 
-ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
-CREDENTIALS_DIR = os.environ.get("CRM_CREDENTIALS_DIR", os.path.join(ROOT_DIR, "credentials"))
+from paths import app_dir
+
+CREDENTIALS_DIR = os.environ.get("CRM_CREDENTIALS_DIR", os.path.join(app_dir(), "credentials"))
 CLIENT_FILE = os.path.join(CREDENTIALS_DIR, "credentials.json")
 TOKEN_FILE = os.path.join(CREDENTIALS_DIR, "token.json")
 SCOPES = [

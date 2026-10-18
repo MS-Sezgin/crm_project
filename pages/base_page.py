@@ -8,9 +8,10 @@ from PyQt6.QtWidgets import QFrame, QHBoxLayout, QLabel, QTableWidgetItem, QVBox
 
 from styles import build_stylesheet
 
-ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-UI_DIR = os.path.join(ROOT_DIR, "ui")
-LOGO_PATH = os.path.join(ROOT_DIR, "assets", "wearhere_logo.png")
+from paths import resource_dir
+
+UI_DIR = os.path.join(resource_dir(), "ui")
+LOGO_PATH = os.path.join(resource_dir(), "assets", "wearhere_logo.png")
 
 
 def fill_table(table, headers, rows):
