@@ -71,6 +71,20 @@ def format_start(value):
     return moment.strftime("%d.%m.%Y %H:%M")
 
 
+def calendar_id():
+    """Calendar to read. Set it in credentials/calendar_id.txt (one line), so code updates do not reset it.
+
+    Without that file the main calendar ("primary") is used.
+    """
+    path = os.path.join(CREDENTIALS_DIR, "calendar_id.txt")
+    if os.path.exists(path):
+        with open(path, encoding="utf-8") as handle:
+            value = handle.read().strip()
+        if value:
+            return value
+    return "primary"
+
+
 def fetch_events(days_back=30, days_ahead=60, max_results=100):
     """Return a list of dicts: name, start, participants (list of e-mails), organizer."""
     from googleapiclient.discovery import build
@@ -78,7 +92,7 @@ def fetch_events(days_back=30, days_ahead=60, max_results=100):
     service = build("calendar", "v3", credentials=_credentials(), cache_discovery=False)
     now = datetime.now(timezone.utc)
     result = service.events().list(
-        calendarId="primary",
+        calendarId=calendar_id(),
         timeMin=(now - timedelta(days=days_back)).isoformat(),
         timeMax=(now + timedelta(days=days_ahead)).isoformat(),
         singleEvents=True,

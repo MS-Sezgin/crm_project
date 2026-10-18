@@ -7,3 +7,6 @@ data/
 # Python cache and temporary files
 __pycache__/
 *.part
+dist/
+build/
+*.spec
