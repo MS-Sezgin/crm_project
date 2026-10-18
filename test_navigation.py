@@ -14,7 +14,7 @@ os.environ["CRM_DATA_DIR"] = DATA_DIR
 os.environ["CRM_CREDENTIALS_DIR"] = tempfile.mkdtemp(prefix="crm_creds_")
 
 from openpyxl import Workbook  # noqa: E402
-from PyQt6.QtWidgets import QApplication  # noqa: E402
+from PyQt6.QtWidgets import QApplication, QTextEdit  # noqa: E402
 
 import google_services  # noqa: E402
 from main import MainWindow  # noqa: E402
@@ -100,6 +100,10 @@ def run_flow(use_ui_file):
     apps = pages["applications"]
     apps.btnAllApplications.click()
     check(apps.tableApplications.rowCount() == 4, "All Applications should show 4 rows")
+    apps.tableApplications.selectRow(0)
+    detail = apps.findChild(QTextEdit, "detailText")
+    check(not detail.isHidden(), "selected row should show the detail panel")
+    check("Name Surname:" in detail.toPlainText() and "Ali As" in detail.toPlainText(), "detail should list the fields")
     apps.btnRefresh.click()
     wait_refresh(app, apps)
     check(apps.tableApplications.rowCount() == 4, "Refresh should keep the current view")
@@ -159,6 +163,8 @@ def run_flow(use_ui_file):
     check(current() is adm, "Admin Menu not opened")
 
     adm.btnEventRecord.click()
+    adm.tableCalendar.selectRow(0)
+    check(not adm.findChild(QTextEdit, "detailText").isHidden(), "event detail should show")
     check(adm.tableCalendar.columnCount() == 4, "Admin table should have 4 columns")
     check(adm.tableCalendar.rowCount() == 2, "Event Record should show 2 events")
 

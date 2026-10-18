@@ -1,23 +1,23 @@
 """Shared colour themes and stylesheet template.
 
-Every window uses the same stylesheet template, so the whole app shares one
-visual language. Only the accent colours change per page, which lets the user
-see which section they are in.
+Visual language follows the approved mockups: light blue-grey background,
+white rounded cards, dark navy text, blue primary buttons and blue badges.
+Each section keeps its own blue shade so the user can tell the sections apart.
 """
 
 THEMES = {
-    "login":             dict(accent="#3F7CAC", hover="#5390BF", pressed="#2F6490", bg="#F5F8FB", sub="#E3EEF7", alt="#FAFCFE"),
-    "preferences":       dict(accent="#3E9C7E", hover="#52AD90", pressed="#31826A", bg="#F3FAF7", sub="#DDF2EA", alt="#F9FDFB"),
-    "preferences_admin": dict(accent="#B5692E", hover="#C77A3D", pressed="#9A5624", bg="#FDF6F1", sub="#F7E2D3", alt="#FEFAF7"),
-    "applications":      dict(accent="#6E5EA8", hover="#8072B8", pressed="#5A4B8E", bg="#F7F6FB", sub="#E6E1F5", alt="#FBFAFD"),
-    "mentor_interview":  dict(accent="#3F8FA0", hover="#55A3B3", pressed="#327483", bg="#F2F9FA", sub="#D9EEF2", alt="#F8FCFD"),
-    "interviews":        dict(accent="#7D8F45", hover="#8FA255", pressed="#67763A", bg="#F8F9F2", sub="#E6EDCF", alt="#FCFDF8"),
-    "admin_menu":        dict(accent="#5A6172", hover="#6E7589", pressed="#474D5C", bg="#F4F5F7", sub="#DDE0E8", alt="#FAFAFB"),
+    "login":             dict(accent="#1F6FEB", hover="#3B82F6", pressed="#1A5BD0", bg="#F3F6FB", sub="#DCE8FB", alt="#F8FAFD"),
+    "preferences":       dict(accent="#2563EB", hover="#3B7BF0", pressed="#1D4ED8", bg="#F3F6FB", sub="#DBE7FF", alt="#F8FAFF"),
+    "preferences_admin": dict(accent="#0B2545", hover="#13335E", pressed="#071A33", bg="#F0F2F6", sub="#D5DCE8", alt="#F7F8FA"),
+    "applications":      dict(accent="#1D4ED8", hover="#2563EB", pressed="#1E40AF", bg="#F3F6FB", sub="#DBE7FF", alt="#F8FAFF"),
+    "mentor_interview":  dict(accent="#0EA5E9", hover="#38BDF8", pressed="#0284C7", bg="#F0F9FF", sub="#D7F0FB", alt="#F7FCFF"),
+    "interviews":        dict(accent="#3B82F6", hover="#60A5FA", pressed="#2563EB", bg="#F3F6FB", sub="#DBEAFE", alt="#F8FBFF"),
+    "admin_menu":        dict(accent="#0B2545", hover="#13335E", pressed="#071A33", bg="#F0F2F6", sub="#D5DCE8", alt="#F7F8FA"),
 }
 
-BASE = dict(text="#1E2A38", border="#D0D7DF", muted="#66727F", card="#FFFFFF")
+BASE = dict(text="#0F172A", border="#E2E8F0", muted="#64748B", card="#FFFFFF")
 
-DANGER = dict(base="#C8553F", hover="#D9694F", pressed="#AD4531")
+DANGER = dict(base="#E5484D", hover="#F0606A", pressed="#C93B40")
 
 
 def build_stylesheet(theme):
@@ -25,25 +25,27 @@ def build_stylesheet(theme):
     return f"""
 #pageRoot {{ background-color: {t['bg']}; }}
 QLabel {{ background: transparent; color: {t['text']}; font-size: 13px; }}
-QLabel#headerTitle {{ color: #FFFFFF; font-size: 22px; font-weight: 700; }}
-QLabel#headerSub {{ color: #FFFFFF; font-size: 12px; }}
-#headerBar {{ background-color: {t['accent']}; border-radius: 12px; }}
-#card {{ background-color: {t['card']}; border: 1px solid {t['border']}; border-radius: 12px; }}
+QLabel#headerTitle {{ color: {t['text']}; font-size: 24px; font-weight: 700; }}
+QLabel#headerSub {{ color: {t['muted']}; font-size: 13px; }}
+#headerBar {{ background-color: transparent; }}
+#card {{ background-color: {t['card']}; border: 1px solid {t['border']}; border-radius: 14px; }}
 #card QLabel {{ color: {t['muted']}; font-size: 12px; font-weight: 600; }}
 QLabel#labelMuted {{ color: {t['muted']}; font-size: 13px; font-style: italic; font-weight: 400; }}
-QLabel#labelWarning {{ color: #B03A2E; font-size: 12px; font-weight: 600; }}
-QLabel#labelBadge {{ background-color: {t['accent']}; color: #FFFFFF; border-radius: 10px; padding: 4px 12px; font-size: 11px; font-weight: 700; }}
-QLineEdit, QComboBox {{ background-color: #FFFFFF; color: {t['text']}; border: 1px solid {t['border']}; border-radius: 8px; padding: 8px 10px; min-height: 20px; }}
+QLabel#labelWarning {{ color: {DANGER['base']}; font-size: 12px; font-weight: 600; }}
+QLabel#labelBadge {{ background-color: {t['accent']}; color: #FFFFFF; border-radius: 11px; padding: 4px 12px; font-size: 11px; font-weight: 700; }}
+QLineEdit, QComboBox {{ background-color: #FFFFFF; color: {t['text']}; border: 1px solid {t['border']}; border-radius: 10px; padding: 9px 12px; min-height: 20px; }}
 QLineEdit:hover, QComboBox:hover {{ border: 1px solid {t['accent']}; }}
 QLineEdit:focus, QComboBox:focus {{ border: 2px solid {t['accent']}; }}
 QComboBox::drop-down {{ border: none; width: 26px; }}
 QComboBox QAbstractItemView {{ background-color: #FFFFFF; border: 1px solid {t['border']}; selection-background-color: {t['accent']}; selection-color: #FFFFFF; }}
-QPushButton {{ background-color: {t['accent']}; color: #FFFFFF; border: 1px solid {t['accent']}; border-radius: 8px; padding: 10px 18px; font-weight: 600; }}
+QCheckBox {{ color: {t['muted']}; font-size: 12px; spacing: 6px; }}
+QPushButton {{ background-color: {t['accent']}; color: #FFFFFF; border: 1px solid {t['accent']}; border-radius: 10px; padding: 10px 18px; font-weight: 600; }}
 QPushButton:hover {{ background-color: {t['hover']}; border: 1px solid {t['pressed']}; }}
 QPushButton:pressed {{ background-color: {t['pressed']}; border: 1px solid {t['pressed']}; padding-top: 11px; padding-bottom: 9px; }}
+QPushButton:disabled {{ background-color: #CBD5E1; border: 1px solid #CBD5E1; color: #F8FAFC; }}
 QPushButton#btnClose, QPushButton#btnExit {{ background-color: {DANGER['base']}; border: 1px solid {DANGER['base']}; }}
 QPushButton#btnClose:hover, QPushButton#btnExit:hover {{ background-color: {DANGER['hover']}; border: 1px solid {DANGER['pressed']}; }}
 QPushButton#btnClose:pressed, QPushButton#btnExit:pressed {{ background-color: {DANGER['pressed']}; border: 1px solid {DANGER['pressed']}; padding-top: 11px; padding-bottom: 9px; }}
-QTableWidget {{ background-color: #FFFFFF; alternate-background-color: {t['alt']}; border: 1px solid {t['border']}; border-radius: 8px; gridline-color: #E3E8EE; selection-background-color: {t['sub']}; selection-color: {t['text']}; }}
-QHeaderView::section {{ background-color: {t['accent']}; color: #FFFFFF; padding: 8px; border: none; font-weight: 600; }}
+QTableWidget {{ background-color: #FFFFFF; alternate-background-color: {t['alt']}; border: 1px solid {t['border']}; border-radius: 10px; gridline-color: {t['border']}; selection-background-color: {t['sub']}; selection-color: {t['text']}; }}
+QHeaderView::section {{ background-color: {t['sub']}; color: {t['text']}; padding: 10px 12px; border: none; border-bottom: 2px solid {t['accent']}; font-weight: 600; }}
 """

@@ -22,7 +22,7 @@ class MainWindow(QMainWindow):
     def __init__(self, use_ui_file=False):
         super().__init__()
         self.setWindowTitle("CRM Capstone")
-        self.resize(980, 680)
+        self.resize(1100, 780)
         self.setMinimumSize(820, 600)
         self.is_admin = False
 
@@ -78,6 +78,6 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     sync_status = sync_from_drive()
     window = MainWindow(use_ui_file="--ui" in sys.argv)
-    window.show()
+    window.showMaximized()
     window.statusBar().showMessage(sync_status)
     sys.exit(app.exec())

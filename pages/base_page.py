@@ -1,10 +1,12 @@
 """Shared base class for all windows (code mode and .ui mode)."""
+import html
 import os
 
 from PyQt6 import uic
 from PyQt6.QtCore import QThread, Qt, pyqtSignal
 from PyQt6.QtGui import QPixmap
-from PyQt6.QtWidgets import QFrame, QHBoxLayout, QLabel, QTableWidgetItem, QVBoxLayout, QWidget
+from PyQt6.QtWidgets import (QFrame, QHBoxLayout, QLabel, QSplitter, QTableWidgetItem,
+                             QTextEdit, QVBoxLayout, QWidget)
 
 from styles import build_stylesheet
 
@@ -23,6 +25,28 @@ def fill_table(table, headers, rows):
     for r, row in enumerate(rows):
         for c, value in enumerate(row):
             table.setItem(r, c, QTableWidgetItem(value))
+
+
+def fill_detail(detail, table):
+    """Show the selected row as readable text: one field per line, long values wrapped.
+
+    The panel is hidden when no row is selected, so the table can use the full height.
+    """
+    row = table.currentRow()
+    if row < 0:
+        detail.clear()
+        detail.hide()
+        return
+    lines = []
+    for c in range(table.columnCount()):
+        header = table.horizontalHeaderItem(c)
+        name = header.text() if header else f"Column {c + 1}"
+        item = table.item(row, c)
+        value = item.text() if item else ""
+        lines.append(f"<p style='margin:0 0 6px 0'><b>{html.escape(name)}:</b> "
+                     f"{html.escape(value) or '-'}</p>")
+    detail.setHtml("".join(lines))
+    detail.show()
 
 
 class SyncThread(QThread):
@@ -44,6 +68,7 @@ class BasePage(QWidget):
     def __init__(self, use_ui_file=False):
         super().__init__()
         self.setObjectName("pageRoot")
+        self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)  # paint the stylesheet background
         self._sync_thread = None
         if use_ui_file:
             uic.loadUi(os.path.join(UI_DIR, self.UI_FILE), self)
@@ -89,6 +114,24 @@ class BasePage(QWidget):
 
     def show_message(self, text):
         self.message.emit(text)
+
+    def add_detail_panel(self, table):
+        """Place a text panel under the table. Selecting a row fills it and shows it."""
+        detail = QTextEdit()
+        detail.setObjectName("detailText")
+        detail.setReadOnly(True)
+        detail.hide()
+        layout = table.parentWidget().layout()
+        index = layout.indexOf(table)
+        layout.removeWidget(table)
+        splitter = QSplitter(Qt.Orientation.Vertical)
+        splitter.setChildrenCollapsible(False)
+        splitter.addWidget(table)
+        splitter.addWidget(detail)
+        splitter.setSizes([480, 180])
+        layout.insertWidget(index, splitter, 1)
+        table.itemSelectionChanged.connect(lambda: fill_detail(detail, table))
+        return detail
 
     def make_header(self, title, subtitle):
         bar = QFrame()

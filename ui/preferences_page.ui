@@ -36,6 +36,7 @@
       <property name="rightMargin"><number>24</number></property>
       <property name="bottomMargin"><number>24</number></property>
       <property name="spacing"><number>12</number></property>
+      <item alignment="Qt::AlignmentFlag::AlignLeft"><widget class="QLabel" name="labelBadge"><property name="text"><string>USER MODE</string></property></widget></item>
       <item><widget class="QPushButton" name="btnApplications"><property name="text"><string>Applications</string></property><property name="minimumSize"><size><width>0</width><height>52</height></size></property></widget></item>
       <item><widget class="QPushButton" name="btnMentorInterview"><property name="text"><string>Mentor Interview</string></property><property name="minimumSize"><size><width>0</width><height>52</height></size></property></widget></item>
       <item><widget class="QPushButton" name="btnInterviews"><property name="text"><string>Interviews</string></property><property name="minimumSize"><size><width>0</width><height>52</height></size></property></widget></item>

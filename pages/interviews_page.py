@@ -1,19 +1,19 @@
-from PyQt6.QtWidgets import QHeaderView, QHBoxLayout, QLineEdit, QPushButton, QTableWidget, QVBoxLayout
+from PyQt6.QtWidgets import QHeaderView, QHBoxLayout, QLineEdit, QPushButton, QTableWidget, QVBoxLayout, QLabel
 
 from data_store import interviews_by_status, search_rows
 from pages.base_page import BasePage, fill_table
 from styles import THEMES
 
 
-HEADER_QSS = "QHeaderView::section { background-color: #46521F; color: #FFFFFF; font-weight: 700; font-size: 12px; padding: 10px 12px; border: none; border-right: 2px solid #DCE5C4; border-bottom: 3px solid #7D8F45; }"
+HEADER_QSS = "QHeaderView::section { background-color: #DBEAFE; color: #0F172A; font-weight: 600; font-size: 12px; padding: 10px 12px; border: none; border-right: 1px solid #94A3B8; border-bottom: 2px solid #3B82F6; }"
 
 
 def style_table(table):
     """Make header labels readable: fixed default width, wrapped text, no clipping."""
     header = table.horizontalHeader()
     header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
-    header.setDefaultSectionSize(180)
-    header.setMinimumSectionSize(130)
+    header.setDefaultSectionSize(150)
+    header.setMinimumSectionSize(120)
     header.setStretchLastSection(False)
     header.setHighlightSections(False)
     header.setMinimumHeight(44)
@@ -27,7 +27,7 @@ class InterviewsPage(BasePage):
 
     def build_ui(self):
         root = QVBoxLayout(self)
-        root.setContentsMargins(28, 24, 28, 24)
+        root.setContentsMargins(16, 20, 16, 20)
         root.setSpacing(16)
         root.addWidget(self.make_header("Interviews", "Project exchange between students and mentors"))
 
@@ -55,6 +55,9 @@ class InterviewsPage(BasePage):
         self.tableInterviews.setAlternatingRowColors(True)
         self.tableInterviews.verticalHeader().setVisible(False)
         body.addWidget(self.tableInterviews, 1)
+        self.labelMuted = QLabel("")
+        self.labelMuted.setObjectName("labelMuted")
+        body.addWidget(self.labelMuted)
         root.addWidget(card, 1)
 
         self.btnRefresh = QPushButton("Refresh")
@@ -64,6 +67,7 @@ class InterviewsPage(BasePage):
         root.addLayout(self.make_footer(self.btnRefresh, self.btnReturn, self.btnExit))
 
     def connect_signals(self):
+        self.add_detail_panel(self.tableInterviews)
         style_table(self.tableInterviews)
         self.route(self.btnReturn, "return_preferences")
         self.btnRefresh.clicked.connect(self.on_refresh)
@@ -95,5 +99,6 @@ class InterviewsPage(BasePage):
         rows = search_rows(headers, rows, self.inputSearch.text())
         fill_table(self.tableInterviews, headers, rows)
         message = f"{len(rows)} interview record(s) shown"
+        self.labelMuted.setText(message)
         self.show_message(message)
         return message

@@ -16,15 +16,15 @@ EXTRA_FILTERS = [
 ]
 
 
-HEADER_QSS = "QHeaderView::section { background-color: #4B3F72; color: #FFFFFF; font-weight: 700; font-size: 12px; padding: 10px 12px; border: none; border-right: 2px solid #D8D2EC; border-bottom: 3px solid #6E5EA8; }"
+HEADER_QSS = "QHeaderView::section { background-color: #DBE7FF; color: #0F172A; font-weight: 600; font-size: 12px; padding: 10px 12px; border: none; border-right: 1px solid #94A3B8; border-bottom: 2px solid #1D4ED8; }"
 
 
 def style_table(table):
     """Make header labels readable: fixed default width, wrapped text, no clipping."""
     header = table.horizontalHeader()
     header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
-    header.setDefaultSectionSize(180)
-    header.setMinimumSectionSize(130)
+    header.setDefaultSectionSize(150)
+    header.setMinimumSectionSize(120)
     header.setStretchLastSection(False)
     header.setHighlightSections(False)
     header.setMinimumHeight(44)
@@ -38,7 +38,7 @@ class ApplicationsPage(BasePage):
 
     def build_ui(self):
         root = QVBoxLayout(self)
-        root.setContentsMargins(28, 24, 28, 24)
+        root.setContentsMargins(16, 20, 16, 20)
         root.setSpacing(16)
         root.addWidget(self.make_header("Applications", "Search and review submitted applications"))
 
@@ -75,6 +75,9 @@ class ApplicationsPage(BasePage):
         self.tableApplications.setAlternatingRowColors(True)
         self.tableApplications.verticalHeader().setVisible(False)
         body.addWidget(self.tableApplications, 1)
+        self.labelMuted = QLabel("")
+        self.labelMuted.setObjectName("labelMuted")
+        body.addWidget(self.labelMuted)
         root.addWidget(card, 1)
 
         self.btnRefresh = QPushButton("Refresh")
@@ -84,6 +87,7 @@ class ApplicationsPage(BasePage):
         root.addLayout(self.make_footer(self.btnRefresh, self.btnReturn, self.btnExit))
 
     def connect_signals(self):
+        self.add_detail_panel(self.tableApplications)
         style_table(self.tableApplications)
         self.route(self.btnReturn, "return_preferences")
         self.btnRefresh.clicked.connect(self.on_refresh)
@@ -95,11 +99,26 @@ class ApplicationsPage(BasePage):
         self.btnMeetingDefined.clicked.connect(lambda: self.set_view("defined"))
         self.btnMeetingNotDefined.clicked.connect(lambda: self.set_view("not_defined"))
         self.comboFilters.currentIndexChanged.connect(self.on_extra_filter)
+        self.update_counts()
 
     def on_extra_filter(self, index):
         view = EXTRA_FILTERS[index][1]
         if view:
             self.set_view(view)
+
+    def update_counts(self):
+        """Show how many records each filter button has."""
+        try:
+            total = len(load_sheet(APPLICATIONS_FILE)[1])
+            defined = len(applications_by_mentor(True)[1])
+            not_defined = len(applications_by_mentor(False)[1])
+        except (FileNotFoundError, ValueError):
+            total = defined = not_defined = None
+        def label(text, count):
+            return f"{text} ({count})" if count is not None else text
+        self.btnAllApplications.setText(label("All Applications", total))
+        self.btnMeetingDefined.setText(label("Mentor Meeting Defined", defined))
+        self.btnMeetingNotDefined.setText(label("Mentor Meeting Not Defined", not_defined))
 
     def set_view(self, view):
         self.current_view = view
@@ -125,6 +144,7 @@ class ApplicationsPage(BasePage):
         self.start_drive_refresh(self.btnRefresh, self.finish_refresh)
 
     def finish_refresh(self, status):
+        self.update_counts()
         text = self.refresh()
         self.show_message(f"{status}. {text}" if text else status)
 
@@ -138,5 +158,6 @@ class ApplicationsPage(BasePage):
         rows = search_rows(headers, rows, self.inputSearch.text())
         fill_table(self.tableApplications, headers, rows)
         message = f"{len(rows)} record(s) shown"
+        self.labelMuted.setText(message)
         self.show_message(message)
         return message

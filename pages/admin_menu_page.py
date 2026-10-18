@@ -7,15 +7,15 @@ from pages.base_page import BasePage, fill_table
 from styles import THEMES
 
 
-HEADER_QSS = "QHeaderView::section { background-color: #3D4251; color: #FFFFFF; font-weight: 700; font-size: 12px; padding: 10px 12px; border: none; border-right: 2px solid #DDE0E8; border-bottom: 3px solid #5A6172; }"
+HEADER_QSS = "QHeaderView::section { background-color: #D5DCE8; color: #0F172A; font-weight: 600; font-size: 12px; padding: 10px 12px; border: none; border-right: 1px solid #94A3B8; border-bottom: 2px solid #0B2545; }"
 
 
 def style_table(table):
     """Make header labels readable: fixed default width, wrapped text, no clipping."""
     header = table.horizontalHeader()
     header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
-    header.setDefaultSectionSize(180)
-    header.setMinimumSectionSize(130)
+    header.setDefaultSectionSize(150)
+    header.setMinimumSectionSize(120)
     header.setStretchLastSection(False)
     header.setHighlightSections(False)
     header.setMinimumHeight(44)
@@ -29,7 +29,7 @@ class AdminMenuPage(BasePage):
 
     def build_ui(self):
         root = QVBoxLayout(self)
-        root.setContentsMargins(28, 24, 28, 24)
+        root.setContentsMargins(16, 20, 16, 20)
         root.setSpacing(16)
         root.addWidget(self.make_header("Admin Menu", "Calendar records and participant mail"))
 
@@ -59,6 +59,7 @@ class AdminMenuPage(BasePage):
         root.addLayout(self.make_footer(self.btnReturnAdmin, self.btnExit))
 
     def connect_signals(self):
+        self.add_detail_panel(self.tableCalendar)
         style_table(self.tableCalendar)
         self.route(self.btnReturnAdmin, "preferences_admin")
         self.route(self.btnExit, "exit")
