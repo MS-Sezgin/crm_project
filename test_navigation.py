@@ -50,11 +50,18 @@ FAKE_EVENTS = [
 SENT = []
 google_services.fetch_events = lambda *a, **k: list(FAKE_EVENTS)
 google_services.send_email = lambda to, subject, body: SENT.append((list(to), subject))
+google_services.sync_drive_files = lambda target, names: {n: "up to date" for n in names}
 
 
 def check(condition, message):
     if not condition:
         raise AssertionError(message)
+
+
+def wait_refresh(app, page):
+    if page._sync_thread is not None:
+        page._sync_thread.wait()
+    app.processEvents()
 
 
 def run_flow(use_ui_file):
@@ -72,6 +79,10 @@ def run_flow(use_ui_file):
     login.btnLogin.click()
     check(current() is pages["login"], "wrong password should not navigate")
     check("Incorrect" in login.labelWarning.text(), "wrong password should show a warning")
+    login.checkShowPassword.setChecked(True)
+    check(login.inputPassword.echoMode() != login.inputPassword.EchoMode.Password, "show password should reveal text")
+    login.checkShowPassword.setChecked(False)
+    check(login.inputPassword.echoMode() == login.inputPassword.EchoMode.Password, "hide password should mask text")
 
     login.inputUsername.setText("student")
     login.inputPassword.setText("1234")
@@ -89,6 +100,9 @@ def run_flow(use_ui_file):
     apps = pages["applications"]
     apps.btnAllApplications.click()
     check(apps.tableApplications.rowCount() == 4, "All Applications should show 4 rows")
+    apps.btnRefresh.click()
+    wait_refresh(app, apps)
+    check(apps.tableApplications.rowCount() == 4, "Refresh should keep the current view")
     apps.btnMeetingDefined.click()
     check(apps.tableApplications.rowCount() == 2, "Mentor Meeting Defined should show 2 rows")
     apps.btnMeetingNotDefined.click()
@@ -107,6 +121,7 @@ def run_flow(use_ui_file):
     apps.comboFilters.setCurrentIndex(4)  # Application Filter
     check(apps.tableApplications.rowCount() == 3, "application filter should show each name once")
     apps.inputSearch.setText("")
+    check(apps.btnExit is not None, "Applications should have an Exit button")
     apps.btnReturn.click()
     check(current() is pages["preferences"], "Applications return failed")
 
@@ -114,6 +129,9 @@ def run_flow(use_ui_file):
     iv = pages["interviews"]
     iv.btnProjectSent.click()
     check(iv.tableInterviews.rowCount() == 2, "Project Sent should show 2 rows")
+    iv.btnRefresh.click()
+    wait_refresh(app, iv)
+    check(iv.tableInterviews.rowCount() == 2, "Refresh should keep Project Sent view")
     iv.btnProjectReceived.click()
     check(iv.tableInterviews.rowCount() == 1, "Project Received should show 1 row")
     iv.btnReturn.click()
@@ -123,6 +141,9 @@ def run_flow(use_ui_file):
     check(mt.comboTabs.count() == 3, "tab combo should have All Tabs + 2 categories")
     mt.btnAllConversations.click()
     check(mt.tableConversations.rowCount() == 2, "All Conversations should show 2 rows")
+    mt.btnRefresh.click()
+    wait_refresh(app, mt)
+    check(mt.tableConversations.rowCount() == 2, "Refresh should reload all conversations")
     mt.comboTabs.setCurrentIndex(1)
     check(mt.tableConversations.rowCount() == 1, "category filter should show 1 row")
     mt.btnReturn.click()

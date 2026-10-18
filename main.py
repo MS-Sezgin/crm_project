@@ -45,12 +45,22 @@ class MainWindow(QMainWindow):
 
         self.show_page("login")
 
+    def closeEvent(self, event):
+        """Wait for a running Drive download, so a file is never left half-written."""
+        for page in self.pages.values():
+            thread = page._sync_thread
+            if thread is not None and thread.isRunning():
+                self.statusBar().showMessage("Waiting for the Drive download to finish...")
+                QApplication.processEvents()
+                thread.wait()
+        event.accept()
+
     def show_page(self, name):
         self.stack.setCurrentWidget(self.pages[name])
 
     def handle_navigation(self, target):
         if target == "exit":
-            QApplication.quit()
+            self.close()  # goes through closeEvent, so a running Drive download is finished first
             return
         if target == "return_preferences":
             target = "preferences_admin" if self.is_admin else "preferences"

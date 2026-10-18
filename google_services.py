@@ -10,7 +10,10 @@ The first call opens a browser for sign-in and creates credentials/token.json.
 Google libraries are imported only when needed, so the rest of the app works without them.
 """
 import base64
+import hashlib
+import json
 import os
+import time
 from datetime import datetime, timedelta, timezone
 from email.message import EmailMessage
 
@@ -24,7 +27,6 @@ SCOPES = [
     "https://www.googleapis.com/auth/gmail.send",
     "https://www.googleapis.com/auth/drive.readonly",
 ]
-DRIVE_FOLDER_ID = os.environ.get("CRM_DRIVE_FOLDER_ID", "1MZkG-X0zkXa9AKKgzR5f3NTihKoOP4Gd")
 
 
 class GoogleSetupError(Exception):
@@ -126,36 +128,123 @@ def send_email(recipients, subject, body):
     service.users().messages().send(userId="me", body={"raw": raw}).execute()
 
 
-def sync_drive_files(target_dir, file_names):
-    """Download files from the Drive data folder when they are new or changed.
+def drive_folder_id():
+    """ID of your Drive folder, read from credentials/drive_folder_id.txt (one line).
 
-    Returns {file_name: "downloaded" | "up to date" | "not found"}.
-    A local copy keeps the Drive modified time, so unchanged files are not downloaded again.
+    Use the part after /folders/ in the folder link. Stored outside the code, so updates keep it.
+    """
+    path = os.path.join(CREDENTIALS_DIR, "drive_folder_id.txt")
+    if not os.path.exists(path):
+        raise GoogleSetupError(f"drive_folder_id.txt was not found at {path}")
+    with open(path, encoding="utf-8") as handle:
+        value = handle.read().strip()
+    if not value:
+        raise GoogleSetupError("drive_folder_id.txt is empty")
+    return value
+
+
+def _md5_of_file(path):
+    digest = hashlib.md5()
+    with open(path, "rb") as handle:
+        for chunk in iter(lambda: handle.read(65536), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+IDS_FILE = os.path.join(CREDENTIALS_DIR, "drive_file_ids.json")
+
+
+def _load_ids():
+    if not os.path.exists(IDS_FILE):
+        return {}
+    with open(IDS_FILE, encoding="utf-8") as handle:
+        return json.load(handle)
+
+
+def _save_ids(ids):
+    os.makedirs(CREDENTIALS_DIR, exist_ok=True)
+    with open(IDS_FILE, "w", encoding="utf-8") as handle:
+        json.dump(ids, handle, indent=2)
+
+
+def _find_file(service, folder_id, name, known_id):
+    """Return the newest copy of a file in the Drive folder, or None.
+
+    Drive's search (files.list) can lag a few minutes behind a fresh edit, so the
+    file is also read directly by its id, which is always current. The newest of
+    both answers is used.
+    """
+    from googleapiclient.errors import HttpError
+
+    candidates = []
+    if known_id:
+        try:
+            meta = service.files().get(
+                fileId=known_id, fields="id,name,modifiedTime,md5Checksum,trashed,parents",
+            ).execute()
+            if not meta.get("trashed") and folder_id in meta.get("parents", []) and meta.get("name") == name:
+                candidates.append(meta)
+        except HttpError:
+            pass  # id no longer valid, the search below finds the file again
+    query = f"'{folder_id}' in parents and name = '{name}' and trashed = false"
+    found = service.files().list(
+        q=query, fields="files(id,name,modifiedTime,md5Checksum)", pageSize=10,
+    ).execute()
+    candidates.extend(found.get("files", []))
+    if not candidates:
+        return None
+    return max(candidates, key=lambda meta: meta.get("modifiedTime", ""))
+
+
+def sync_drive_files(target_dir, file_names):
+    """Download files from the Drive data folder when their content differs from the local copy.
+
+    Compares content checksums (md5), not timestamps. Returns
+    {file_name: "downloaded" | "up to date" | "not found" | "retry later"}.
+    "retry later": Drive served an older version than its metadata; the local copy is kept.
     """
     from googleapiclient.discovery import build
 
+    folder_id = drive_folder_id()
     service = build("drive", "v3", credentials=_credentials(), cache_discovery=False)
     os.makedirs(target_dir, exist_ok=True)
+    ids = _load_ids()
     results = {}
-    for name in file_names:
-        query = f"'{DRIVE_FOLDER_ID}' in parents and name = '{name}' and trashed = false"
-        found = service.files().list(q=query, fields="files(id,name,modifiedTime)", pageSize=5).execute()
-        files = found.get("files", [])
-        if not files:
-            results[name] = "not found"
-            continue
-        item = files[0]
-        remote_time = datetime.fromisoformat(item["modifiedTime"].replace("Z", "+00:00")).timestamp()
-        path = os.path.join(target_dir, name)
-        if os.path.exists(path) and abs(os.path.getmtime(path) - remote_time) < 2:
-            results[name] = "up to date"
-            continue
-        content = service.files().get_media(fileId=item["id"]).execute()
-        temp_path = path + ".part"
-        with open(temp_path, "wb") as handle:
-            handle.write(content)
-        os.replace(temp_path, path)
-        os.utime(path, (remote_time, remote_time))
-        results[name] = "downloaded"
-    return results
+    try:
+        for name in file_names:
+            item = _find_file(service, folder_id, name, ids.get(name))
+            if item is None:
+                results[name] = "not found"
+                ids.pop(name, None)
+                continue
+            ids[name] = item["id"]
+            remote_md5 = item.get("md5Checksum")
+            path = os.path.join(target_dir, name)
 
+            if remote_md5 and os.path.exists(path) and _md5_of_file(path) == remote_md5:
+                results[name] = "up to date"
+                continue
+
+            content = b""
+            matched = False
+            for attempt in range(3):
+                content = service.files().get_media(fileId=item["id"]).execute()
+                if not remote_md5 or hashlib.md5(content).hexdigest() == remote_md5:
+                    matched = True
+                    break
+                time.sleep(2)
+            if not matched:
+                results[name] = "retry later"
+                continue
+
+            temp_path = path + ".part"
+            with open(temp_path, "wb") as handle:
+                handle.write(content)
+            os.replace(temp_path, path)
+            if item.get("modifiedTime"):
+                remote_time = datetime.fromisoformat(item["modifiedTime"].replace("Z", "+00:00")).timestamp()
+                os.utime(path, (remote_time, remote_time))
+            results[name] = "downloaded"
+    finally:
+        _save_ids(ids)
+    return results

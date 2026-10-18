@@ -1,12 +1,23 @@
-# Google credentials and tokens must never be uploaded
+# Google keys, tokens and saved ids: never upload
 credentials/
 
-# Student data (Excel files, VIT lists) must not be uploaded
+# Student data (Excel files, VIT lists): never upload
 data/
 
-# Python cache and temporary files
-__pycache__/
-*.part
+# Build output from PyInstaller
 dist/
 build/
 *.spec
+
+# Python cache and temporary files
+__pycache__/
+*.pyc
+*.part
+*.log
+
+# Editor and virtual environment folders
+.vscode/
+.idea/
+venv/
+.venv/
+env/

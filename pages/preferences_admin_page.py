@@ -45,7 +45,7 @@ class PreferencesAdminPage(BasePage):
             body.addWidget(button)
         root.addWidget(card, 0, Qt.AlignmentFlag.AlignHCenter)
 
-        self.btnLogout = QPushButton("Log out")
+        self.btnLogout = QPushButton("Main Menu")
         root.addWidget(self.btnLogout, 0, Qt.AlignmentFlag.AlignHCenter)
         self.btnClose = QPushButton("Close")
         root.addWidget(self.btnClose, 0, Qt.AlignmentFlag.AlignHCenter)

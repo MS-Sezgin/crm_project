@@ -59,7 +59,9 @@
    <item>
     <layout class="QHBoxLayout" name="footerRow">
      <item><spacer name="footerSpacer"><property name="orientation"><enum>Qt::Orientation::Horizontal</enum></property><property name="sizeHint" stdset="0"><size><width>40</width><height>20</height></size></property></spacer></item>
+     <item><widget class="QPushButton" name="btnRefresh"><property name="text"><string>Refresh</string></property></widget></item>
      <item><widget class="QPushButton" name="btnReturn"><property name="text"><string>Return to Preferences Screen</string></property></widget></item>
+     <item><widget class="QPushButton" name="btnExit"><property name="text"><string>Exit</string></property></widget></item>
     </layout>
    </item>
   </layout>

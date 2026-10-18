@@ -249,6 +249,10 @@ def sync_from_drive():
     except Exception as error:  # no internet, no credentials, file locked, API error
         return f"Drive sync skipped, using local files: {error}"
     updated = [name for name, state in results.items() if state == "downloaded"]
+    pending = [name for name, state in results.items() if state == "retry later"]
+    if pending:
+        return (f"Drive: {len(updated)} file(s) updated, {len(pending)} not ready yet "
+                f"(will retry on next refresh)")
     if updated:
         return f"Drive: {len(updated)} file(s) updated"
     return "Drive: local files are up to date"

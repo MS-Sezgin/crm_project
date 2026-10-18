@@ -1,5 +1,5 @@
 from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QLabel, QLineEdit, QPushButton, QVBoxLayout
+from PyQt6.QtWidgets import QCheckBox, QLabel, QLineEdit, QPushButton, QVBoxLayout
 
 from data_store import check_login
 from pages.base_page import BasePage
@@ -38,13 +38,14 @@ class LoginPage(BasePage):
         self.inputPassword = QLineEdit()
         self.inputPassword.setPlaceholderText("Enter your password")
         self.inputPassword.setEchoMode(QLineEdit.EchoMode.Password)
+        self.checkShowPassword = QCheckBox("Show password")
         self.labelWarning = QLabel("")
         self.labelWarning.setObjectName("labelWarning")
         self.btnLogin = QPushButton("Login")
         self.btnLogin.setMinimumHeight(44)
 
         for widget in (self.labelUsername, self.inputUsername, self.labelPassword,
-                       self.inputPassword, self.labelWarning):
+                       self.inputPassword, self.checkShowPassword, self.labelWarning):
             body.addWidget(widget)
         body.addSpacing(8)
         body.addWidget(self.btnLogin)
@@ -56,8 +57,13 @@ class LoginPage(BasePage):
 
     def connect_signals(self):
         self.btnLogin.clicked.connect(self.on_login)
+        self.checkShowPassword.toggled.connect(self.toggle_password)
         self.inputPassword.returnPressed.connect(self.on_login)
         self.route(self.btnClose, "exit")
+
+    def toggle_password(self, checked):
+        mode = QLineEdit.EchoMode.Normal if checked else QLineEdit.EchoMode.Password
+        self.inputPassword.setEchoMode(mode)
 
     def reset(self):
         self.inputUsername.clear()

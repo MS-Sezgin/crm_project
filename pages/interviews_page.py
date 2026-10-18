@@ -57,12 +57,17 @@ class InterviewsPage(BasePage):
         body.addWidget(self.tableInterviews, 1)
         root.addWidget(card, 1)
 
+        self.btnRefresh = QPushButton("Refresh")
         self.btnReturn = QPushButton("Return to Preferences Screen")
-        root.addLayout(self.make_footer(self.btnReturn))
+        self.btnExit = QPushButton("Exit")
+        self.btnExit.setObjectName("btnExit")
+        root.addLayout(self.make_footer(self.btnRefresh, self.btnReturn, self.btnExit))
 
     def connect_signals(self):
         style_table(self.tableInterviews)
         self.route(self.btnReturn, "return_preferences")
+        self.btnRefresh.clicked.connect(self.on_refresh)
+        self.route(self.btnExit, "exit")
         self.current_view = None
         self.btnSearch.clicked.connect(self.refresh)
         self.inputSearch.returnPressed.connect(self.refresh)
@@ -73,6 +78,13 @@ class InterviewsPage(BasePage):
         self.current_view = view
         self.refresh()
 
+    def on_refresh(self, *_):
+        self.start_drive_refresh(self.btnRefresh, self.finish_refresh)
+
+    def finish_refresh(self, status):
+        text = self.refresh()
+        self.show_message(f"{status}. {text}" if text else status)
+
     def refresh(self, *_):
         try:
             headers, rows = interviews_by_status(self.current_view)
@@ -82,4 +94,6 @@ class InterviewsPage(BasePage):
             return
         rows = search_rows(headers, rows, self.inputSearch.text())
         fill_table(self.tableInterviews, headers, rows)
-        self.show_message(f"{len(rows)} interview record(s) shown")
+        message = f"{len(rows)} interview record(s) shown"
+        self.show_message(message)
+        return message

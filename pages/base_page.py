@@ -2,7 +2,7 @@
 import os
 
 from PyQt6 import uic
-from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtCore import QThread, Qt, pyqtSignal
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import QFrame, QHBoxLayout, QLabel, QTableWidgetItem, QVBoxLayout, QWidget
 
@@ -25,6 +25,15 @@ def fill_table(table, headers, rows):
             table.setItem(r, c, QTableWidgetItem(value))
 
 
+class SyncThread(QThread):
+    """Runs the Drive sync in the background, so the window does not freeze."""
+    done = pyqtSignal(str)
+
+    def run(self):
+        from data_store import sync_from_drive
+        self.done.emit(sync_from_drive())
+
+
 class BasePage(QWidget):
     navigate = pyqtSignal(str)  # name of the window to open
     message = pyqtSignal(str)   # text shown in the status bar
@@ -35,6 +44,7 @@ class BasePage(QWidget):
     def __init__(self, use_ui_file=False):
         super().__init__()
         self.setObjectName("pageRoot")
+        self._sync_thread = None
         if use_ui_file:
             uic.loadUi(os.path.join(UI_DIR, self.UI_FILE), self)
         else:
@@ -60,6 +70,22 @@ class BasePage(QWidget):
 
     def route(self, button, target):
         button.clicked.connect(lambda _checked=False, t=target: self.navigate.emit(t))
+
+    def start_drive_refresh(self, button, after):
+        """Start a Drive sync in the background; call after(status) when it ends."""
+        if self._sync_thread is not None and self._sync_thread.isRunning():
+            return
+        self._after_sync = after
+        self._refresh_button = button
+        button.setEnabled(False)
+        self.show_message("Refreshing from Drive...")
+        self._sync_thread = SyncThread()
+        self._sync_thread.done.connect(self._on_sync_done)
+        self._sync_thread.start()
+
+    def _on_sync_done(self, status):
+        self._refresh_button.setEnabled(True)
+        self._after_sync(status)
 
     def show_message(self, text):
         self.message.emit(text)

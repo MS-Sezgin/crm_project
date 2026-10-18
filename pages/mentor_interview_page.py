@@ -60,12 +60,17 @@ class MentorInterviewPage(BasePage):
         body.addWidget(self.tableConversations, 1)
         root.addWidget(card, 1)
 
+        self.btnRefresh = QPushButton("Refresh")
         self.btnReturn = QPushButton("Return to Preferences Screen")
-        root.addLayout(self.make_footer(self.btnReturn))
+        self.btnExit = QPushButton("Exit")
+        self.btnExit.setObjectName("btnExit")
+        root.addLayout(self.make_footer(self.btnRefresh, self.btnReturn, self.btnExit))
 
     def connect_signals(self):
         style_table(self.tableConversations)
         self.route(self.btnReturn, "return_preferences")
+        self.btnRefresh.clicked.connect(self.on_refresh)
+        self.route(self.btnExit, "exit")
         self.current_category = None
         self.load_tabs()
         self.btnSearch.clicked.connect(self.refresh)
@@ -96,6 +101,15 @@ class MentorInterviewPage(BasePage):
         self.current_category = None
         self.refresh()
 
+    def on_refresh(self, *_):
+        self.start_drive_refresh(self.btnRefresh, self.finish_refresh)
+
+    def finish_refresh(self, status):
+        self.load_tabs()  # recommendation categories may have changed in Drive
+        self.current_category = None
+        text = self.refresh()
+        self.show_message(f"{status}. {text}" if text else status)
+
     def refresh(self, *_):
         try:
             headers, rows = mentor_by_category(self.current_category)
@@ -105,4 +119,6 @@ class MentorInterviewPage(BasePage):
             return
         rows = search_rows(headers, rows, self.inputSearch.text())
         fill_table(self.tableConversations, headers, rows)
-        self.show_message(f"{len(rows)} conversation(s) shown")
+        message = f"{len(rows)} conversation(s) shown"
+        self.show_message(message)
+        return message
